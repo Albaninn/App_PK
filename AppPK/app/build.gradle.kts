@@ -3,8 +3,11 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
-    //Adicionar KSP
+    // Adicionar KSP para Room
     id("com.google.devtools.ksp")
+
+    // Adicionar Google Services para Firebase
+    id("com.google.gms.google-services")version "4.4.2" apply false
 }
 
 android {
@@ -43,7 +46,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -61,10 +63,14 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    //Adicionar dependências do ROOM DATABASE
-    val room_version = "2.6.1"
-    implementation("androidx.room:room-runtime:$room_version")
-    annotationProcessor("androidx.room:room-compiler:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
-    ksp("androidx.room:room-compiler:$room_version")
+    // Dependências do ROOM DATABASE
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler) // KSP para Room
+
+    // Dependências do Firebase Firestore
+    implementation(libs.firebase.firestore.ktx.v2402)
 }
+
+// Aplicar plugin do Google Services
+apply(plugin = "com.google.gms.google-services")
