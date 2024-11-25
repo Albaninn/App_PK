@@ -18,21 +18,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-
+import br.pessoal.apppk.database.AppDatabase
+import kotlinx.coroutines.launch
 
 @Composable
-fun LoginScreen(navController: NavHostController) {
+fun LoginScreen(navController: NavHostController, db: AppDatabase) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var loginError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
+    val coroutineScope = rememberCoroutineScope()
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -75,18 +78,21 @@ fun LoginScreen(navController: NavHostController) {
 
             Button(
                 onClick = {
-                    if (username.isEmpty()) {
-                        loginError = true
-                        errorMessage = "O campo usuário não pode estar vazio."
-                    } else if (password.isEmpty()) {
-                        loginError = true
-                        errorMessage = "O campo senha não pode estar vazio."
-                    } else if (userCredentials.containsKey(username) && userCredentials[username]?.password == password) {
-                        loginError = false
-                        navController.navigate("second_screen/$username")
-                    } else {
-                        loginError = true
-                        errorMessage = "Usuário ou senha inválidos."
+                    coroutineScope.launch {
+                        val user = db.userProfileDao().getUserByUsername(username)
+                        if (username.isEmpty()) {
+                            loginError = true
+                            errorMessage = "O campo usuário não pode estar vazio."
+                        } else if (password.isEmpty()) {
+                            loginError = true
+                            errorMessage = "O campo senha não pode estar vazio."
+                        } else if (user != null && user.password == password) {
+                            loginError = false
+                            navController.navigate("second_screen/$username")
+                        } else {
+                            loginError = true
+                            errorMessage = "Usuário ou senha inválidos."
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()

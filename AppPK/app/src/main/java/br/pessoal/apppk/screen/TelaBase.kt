@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,22 +44,36 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import br.pessoal.apppk.DataBase.UserProfile
+import br.pessoal.apppk.DataBase.UserProfileDao
 import br.pessoal.apppk.R
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BaseScreen(navController: NavHostController, username: String, isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
-    val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "", "")
+fun BaseScreen(navController: NavHostController, username: String, isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit, db: UserProfileDao) {
+    var userProfile by remember { mutableStateOf<UserProfile?>(null) }
 
-    val firstName = userProfile.fullName.split(" ").firstOrNull() ?: "Desconhecido"
+    LaunchedEffect(username) {
+        // Acessando os dados do usuário do banco de dados
+        val profile = db.getUserByUsername(username)
+        userProfile = profile
+    }
+
+    // Caso o perfil não esteja carregado, você pode exibir uma tela de carregamento ou um fallback.
+    if (userProfile == null) {
+        // Exemplo de fallback enquanto os dados não chegam
+        return
+    }
+
+    val firstName = userProfile?.fullName?.split(" ")?.firstOrNull() ?: "Desconhecido"
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
 
     val items = mutableListOf("Consulta de Hora", "Check-List", "Exercicios")
 
-    if (userProfile.accessLevel == "adm") {
+    if (userProfile?.accessLevel == "adm") {
         items.add(0, "Tela administrativa")
     }
 

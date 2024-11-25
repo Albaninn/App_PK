@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,10 +28,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import br.pessoal.apppk.DataBase.UserProfile
-import br.pessoal.apppk.DataBase.userCredentials
+import br.pessoal.apppk.database.AppDatabase
+import kotlinx.coroutines.launch
 
 @Composable
-fun RegistrationScreen(navController: NavHostController) {
+fun RegistrationScreen(navController: NavHostController, db: AppDatabase) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var fullName by remember { mutableStateOf("") }
@@ -39,6 +41,7 @@ fun RegistrationScreen(navController: NavHostController) {
     var isRegistering by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
+    val coroutineScope = rememberCoroutineScope()
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -105,7 +108,7 @@ fun RegistrationScreen(navController: NavHostController) {
             ) {
                 Button(
                     onClick = {
-                        if (isRegistering) {
+                        coroutineScope.launch {if (isRegistering) {
                             when {
                                 fullName.isEmpty() -> errorMessage = "O campo nome completo não pode estar vazio."
                                 email.isEmpty() -> errorMessage = "O campo email não pode estar vazio."
@@ -113,21 +116,24 @@ fun RegistrationScreen(navController: NavHostController) {
                                 password.isEmpty() -> errorMessage = "O campo senha não pode estar vazio."
                                 else -> {
                                     errorMessage = ""
-                                    userCredentials[username] = UserProfile(fullName, password, email, accessLevel)
+                                    val newUser = UserProfile(username, fullName, password, email, accessLevel)
+                                    db.userProfileDao().insertUser(newUser)
                                     navController.navigate("second_screen/$username")
                                 }
                             }
                         } else {
+                            val user = db.userProfileDao().getUserByUsername(username)
                             when {
                                 username.isEmpty() -> errorMessage = "O campo usuário não pode estar vazio."
                                 password.isEmpty() -> errorMessage = "O campo senha não pode estar vazio."
-                                userCredentials.containsKey(username) && userCredentials[username]?.password == password -> {
+                                user != null && user.password == password -> {
                                     errorMessage = ""
                                     navController.navigate("second_screen/$username")
                                 }
                                 else -> errorMessage = "Usuário ou senha inválidos."
                             }
-                        }
+                        }}
+
                     },
                     modifier = Modifier.weight(1f)
                 ) {
