@@ -5,10 +5,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,9 +20,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -32,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,7 +71,16 @@ fun MyApp(content: @Composable () -> Unit) {
     val darkTheme = isSystemInDarkTheme()
     MaterialTheme(
         colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
-        content = content
+        typography = Typography,
+        content = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                content()
+            }
+        }
     )
 }
 
@@ -91,8 +107,23 @@ private val LightColorScheme = lightColorScheme(
     onSurface = Color.Black
 )
 
+// Tipografia personalizada
+private val Typography = Typography(
+    bodyLarge = TextStyle(
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp
+    ),
+    titleLarge = TextStyle(
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+        lineHeight = 32.sp
+    )
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ListarAfazeresScreen() {
+fun ListarAfazeresScreen() {
     var titulo by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
     var afazeres by remember { mutableStateOf(listOf<Afazer>()) }
@@ -111,14 +142,14 @@ private fun ListarAfazeresScreen() {
 
     Column(
         modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
+            .fillMaxSize()
+            .padding(40.dp)
     ) {
         // Header
         Text(
-            text = if (selectedAfazer == null) "Novo Afazer" else "Editar Afazer",
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
+            text = if (selectedAfazer == null) "Nova Tarefa" else "Editar Tarefa",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -127,6 +158,11 @@ private fun ListarAfazeresScreen() {
             value = titulo,
             onValueChange = { titulo = it },
             label = { Text("Título") },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface
+                //textColor = MaterialTheme.colorScheme.onBackground
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
@@ -135,6 +171,11 @@ private fun ListarAfazeresScreen() {
             value = descricao,
             onValueChange = { descricao = it },
             label = { Text("Descrição") },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface
+                //textColor = MaterialTheme.colorScheme.onBackground
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -166,8 +207,8 @@ private fun ListarAfazeresScreen() {
         // Task List Header
         Text(
             text = "Lista de Afazeres",
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -210,13 +251,12 @@ fun TaskCard(
         ) {
             Text(
                 text = afazer.titulo,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = afazer.descricao,
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(top = 4.dp)
             )
