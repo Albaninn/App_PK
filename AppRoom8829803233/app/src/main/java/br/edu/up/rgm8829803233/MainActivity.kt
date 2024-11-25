@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,8 +14,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,10 +51,45 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ListarAfazeresScreen()
+            MyApp {
+                ListarAfazeresScreen()
+            }
         }
     }
 }
+
+// Tema personalizado
+@Composable
+fun MyApp(content: @Composable () -> Unit) {
+    val darkTheme = isSystemInDarkTheme()
+    MaterialTheme(
+        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+        content = content
+    )
+}
+
+// Paletas de cores
+private val DarkColorScheme = darkColorScheme(
+    primary = Color(0xFFBB86FC),
+    secondary = Color(0xFF03DAC6),
+    background = Color(0xFF121212),
+    surface = Color(0xFF1E1E1E),
+    onPrimary = Color.Black,
+    onSecondary = Color.Black,
+    onBackground = Color.White,
+    onSurface = Color.White
+)
+
+private val LightColorScheme = lightColorScheme(
+    primary = Color(0xFF6200EE),
+    secondary = Color(0xFF03DAC6),
+    background = Color.White,
+    surface = Color.White,
+    onPrimary = Color.White,
+    onSecondary = Color.Black,
+    onBackground = Color.Black,
+    onSurface = Color.Black
+)
 
 @Composable
 private fun ListarAfazeresScreen() {
@@ -155,17 +198,28 @@ fun TaskCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    androidx.compose.material3.Card(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
-        elevation = androidx.compose.material3.CardDefaults.cardElevation(8.dp)
+        elevation = CardDefaults.cardElevation(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(text = afazer.titulo, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            Text(text = afazer.descricao, fontSize = 16.sp, modifier = Modifier.padding(top = 4.dp))
+            Text(
+                text = afazer.titulo,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = afazer.descricao,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 4.dp)
+            )
 
             Row(
                 modifier = Modifier.padding(top = 8.dp)
@@ -180,8 +234,9 @@ fun TaskCard(
                 Button(
                     onClick = onDelete,
                     modifier = Modifier.weight(1f),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = androidx.compose.ui.graphics.Color.Red
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
                     )
                 ) {
                     Text("Excluir")
@@ -190,8 +245,6 @@ fun TaskCard(
         }
     }
 }
-
-
 
 //INFRAESTRUTURA DE BANCO DE DADOS
 // 1) Entidade do banco de dados
@@ -212,7 +265,6 @@ interface AfazerDao {
     suspend fun listar(): List<Afazer>
     @Query("select * from tab_afazer where id = :idx")
     suspend fun buscarPorId(idx: Int): Afazer
-    //@Update @Insert
     @Upsert
     suspend fun gravar(afazer: Afazer)
     @Delete
