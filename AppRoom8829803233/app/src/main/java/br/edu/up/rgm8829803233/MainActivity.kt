@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -23,21 +24,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
-import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.launch
 
@@ -70,35 +67,37 @@ private fun ListarAfazeresScreen() {
     }
 
     Column(
-        modifier = Modifier.padding(
-            top = 90.dp,
-            start = 20.dp,
-            end = 20.dp,
-            bottom = 20.dp
-        )
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
     ) {
+        // Header
         Text(
-            text = "Novo ou Editar Afazer",
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 30.sp
+            text = if (selectedAfazer == null) "Novo Afazer" else "Editar Afazer",
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
-        Spacer(modifier = Modifier.height(10.dp))
+
+        // Input Fields
         OutlinedTextField(
             value = titulo,
             onValueChange = { titulo = it },
-            textStyle = TextStyle(fontSize = 25.sp, fontWeight = FontWeight.Normal),
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Título") }
+            label = { Text("Título") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         )
-        Spacer(modifier = Modifier.height(10.dp))
         OutlinedTextField(
             value = descricao,
             onValueChange = { descricao = it },
-            textStyle = TextStyle(fontSize = 25.sp, fontWeight = FontWeight.Normal),
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Descrição") }
+            label = { Text("Descrição") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
         )
-        Spacer(modifier = Modifier.height(10.dp))
+
+        // Save/Update Button
         Button(
             onClick = {
                 coroutineScope.launch {
@@ -113,50 +112,85 @@ private fun ListarAfazeresScreen() {
                     descricao = ""
                     selectedAfazer = null
                 }
-            }
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = if (selectedAfazer == null) "Salvar" else "Atualizar",
-                fontSize = 30.sp
-            )
+            Text(text = if (selectedAfazer == null) "Salvar" else "Atualizar")
         }
-        Spacer(modifier = Modifier.height(10.dp))
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Task List Header
         Text(
-            text = "Lista de afazeres",
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 30.sp
+            text = "Lista de Afazeres",
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
-        Spacer(modifier = Modifier.height(10.dp))
+
+        // Task List
         for (afazer in afazeres) {
-            Column(modifier = Modifier.padding(vertical = 5.dp)) {
-                Text(text = afazer.titulo, fontSize = 25.sp)
-                Text(text = afazer.descricao, fontSize = 20.sp)
-                Row {
-                    Button(
-                        onClick = {
-                            titulo = afazer.titulo
-                            descricao = afazer.descricao
-                            selectedAfazer = afazer
-                        },
-                        modifier = Modifier.padding(end = 10.dp)
-                    ) {
-                        Text("Editar")
+            TaskCard(
+                afazer = afazer,
+                onEdit = {
+                    titulo = afazer.titulo
+                    descricao = afazer.descricao
+                    selectedAfazer = afazer
+                },
+                onDelete = {
+                    coroutineScope.launch {
+                        dao.excluir(afazer)
+                        afazeres = dao.listar()
                     }
-                    Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                dao.excluir(afazer)
-                                afazeres = dao.listar()
-                            }
-                        }
-                    ) {
-                        Text("Excluir")
-                    }
+                }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+fun TaskCard(
+    afazer: Afazer,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    androidx.compose.material3.Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(text = afazer.titulo, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Text(text = afazer.descricao, fontSize = 16.sp, modifier = Modifier.padding(top = 4.dp))
+
+            Row(
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Button(
+                    onClick = onEdit,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Editar")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = onDelete,
+                    modifier = Modifier.weight(1f),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = androidx.compose.ui.graphics.Color.Red
+                    )
+                ) {
+                    Text("Excluir")
                 }
             }
         }
     }
 }
+
 
 
 //INFRAESTRUTURA DE BANCO DE DADOS
